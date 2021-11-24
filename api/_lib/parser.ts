@@ -5,13 +5,16 @@ import { ParsedRequest, Theme } from './types';
 export function parseRequest(req: IncomingMessage) {
     console.log('HTTP ' + req.url);
     const { pathname, query } = parse(req.url || '/', true);
-    const { fontSize, images, widths, heights, theme, md } = (query || {});
+    const { ogType, fontSize, images, widths, heights, theme, md, subheading, subheadingFontSize } = (query || {});
 
     if (Array.isArray(fontSize)) {
         throw new Error('Expected a single fontSize');
     }
     if (Array.isArray(theme)) {
         throw new Error('Expected a single theme');
+    }
+    if (Array.isArray(ogType)) {
+        throw new Error('Expected a single og type');
     }
     
     const arr = (pathname || '/').slice(1).split('.');
@@ -29,6 +32,12 @@ export function parseRequest(req: IncomingMessage) {
     const parsedRequest: ParsedRequest = {
         fileType: extension === 'jpeg' ? extension : 'png',
         text: decodeURIComponent(text),
+        // @ts-ignore // weird issue here
+        ogType: ogType,
+        // @ts-ignore // weird issue here
+        subheading: subheading,
+        // @ts-ignore // weird issue here
+        subheadingFontSize: subheadingFontSize || '75px',
         theme: theme === 'dark' ? 'dark' : 'light',
         md: md === '1' || md === 'true',
         fontSize: fontSize || '96px',
@@ -52,8 +61,8 @@ function getArray(stringOrArray: string[] | string | undefined): string[] {
 
 function getDefaultImages(images: string[], theme: Theme): string[] {
     const defaultImage = theme === 'light'
-        ? 'https://assets.vercel.com/image/upload/front/assets/design/vercel-triangle-black.svg'
-        : 'https://assets.vercel.com/image/upload/front/assets/design/vercel-triangle-white.svg';
+        ? 'https://app.supabase.io/img/supabase-logo.svg'
+        : 'https://app.supabase.io/img/supabase-logo.svg';
 
     if (!images || !images[0]) {
         return [defaultImage];

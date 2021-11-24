@@ -1,4 +1,4 @@
-import { ParsedRequest, Theme, FileType } from '../api/_lib/types';
+import { ParsedRequest, Theme, FileType, ogType } from '../api/_lib/types';
 const { H, R, copee } = (window as any);
 let timeout = -1;
 
@@ -120,10 +120,16 @@ const Toast = ({ show, message }: ToastProps) => {
     );
 }
 
+const ogTypeOptions: DropdownOption[] = [
+  { text: 'Blog', value: 'blog' },
+  { text: 'Docs', value: 'docs' },
+];
+
 const themeOptions: DropdownOption[] = [
     { text: 'Light', value: 'light' },
     { text: 'Dark', value: 'dark' },
 ];
+
 
 const fileTypeOptions: DropdownOption[] = [
     { text: 'PNG', value: 'png' },
@@ -136,19 +142,26 @@ const fontSizeOptions: DropdownOption[] = Array
     .filter(n => n > 0)
     .map(n => ({ text: n + 'px', value: n + 'px' }));
 
+const subheadingSizeOptions: DropdownOption[] = Array
+    .from({ length: 10 })
+    .map((_, i) => i * 25)
+    .filter(n => n > 0)
+    .map(n => ({ text: n + 'px', value: n + 'px' }));
+
 const markdownOptions: DropdownOption[] = [
     { text: 'Plain Text', value: '0' },
     { text: 'Markdown', value: '1' },
 ];
 
 const imageLightOptions: DropdownOption[] = [
+    { text: 'Supabase', value: 'https://app.supabase.io/img/supabase-logo.svg'},
     { text: 'Vercel', value: 'https://assets.vercel.com/image/upload/front/assets/design/vercel-triangle-black.svg' },
     { text: 'Next.js', value: 'https://assets.vercel.com/image/upload/front/assets/design/nextjs-black-logo.svg' },
     { text: 'Hyper', value: 'https://assets.vercel.com/image/upload/front/assets/design/hyper-color-logo.svg' },
 ];
 
 const imageDarkOptions: DropdownOption[] = [
-
+    { text: 'Supabase', value: 'https://app.supabase.io/img/supabase-logo.svg'},
     { text: 'Vercel', value: 'https://assets.vercel.com/image/upload/front/assets/design/vercel-triangle-white.svg' },
     { text: 'Next.js', value: 'https://assets.vercel.com/image/upload/front/assets/design/nextjs-white-logo.svg' },
     { text: 'Hyper', value: 'https://assets.vercel.com/image/upload/front/assets/design/hyper-bw-logo.svg' },
@@ -203,10 +216,13 @@ const App = (_: any, state: AppState, setState: SetState) => {
     const {
         fileType = 'png',
         fontSize = '100px',
-        theme = 'light',
+        subheadingFontSize = '100px',
+        theme = 'dark',
         md = true,
         text = '**Hello** World',
-        images=[imageLightOptions[0].value],
+        subheading = 'Create and manage invoices for all your customers.',
+        ogType = "docs",
+        images=[imageDarkOptions[0].value],
         widths=[],
         heights=[],
         showToast = false,
@@ -216,10 +232,12 @@ const App = (_: any, state: AppState, setState: SetState) => {
         overrideUrl = null,
     } = state;
     const mdValue = md ? '1' : '0';
-    const imageOptions = theme === 'light' ? imageLightOptions : imageDarkOptions;
+    const imageOptions = theme === 'dark' ? imageLightOptions : imageDarkOptions;
     const url = new URL(window.location.origin);
     url.pathname = `${encodeURIComponent(text)}.${fileType}`;
     url.searchParams.append('theme', theme);
+    url.searchParams.append('subheading', subheading);
+    url.searchParams.append("ogType", ogType);
     url.searchParams.append('md', mdValue);
     url.searchParams.append('fontSize', fontSize);
     for (let image of images) {
@@ -237,6 +255,14 @@ const App = (_: any, state: AppState, setState: SetState) => {
         H('div',
             { className: 'pull-left' },
             H('div',
+                H(Field, {
+                  label: 'ogType',
+                  input: H(Dropdown, {
+                      options: ogTypeOptions,
+                      value: ogType,
+                      onchange: (val: ogType) => setLoadingState({ ogType: val })
+                  })
+                }),
                 H(Field, {
                     label: 'Theme',
                     input: H(Dropdown, {
@@ -267,6 +293,14 @@ const App = (_: any, state: AppState, setState: SetState) => {
                     })
                 }),
                 H(Field, {
+                  label: 'Subheading Font Size',
+                  input: H(Dropdown, {
+                      options: subheadingSizeOptions,
+                      value: subheadingFontSize,
+                      onchange: (val: string) => setLoadingState({ subheadingFontSize: val })
+                  })
+                }),
+                H(Field, {
                     label: 'Text Type',
                     input: H(Dropdown, {
                         options: markdownOptions,
@@ -275,14 +309,24 @@ const App = (_: any, state: AppState, setState: SetState) => {
                     })
                 }),
                 H(Field, {
-                    label: 'Text Input',
-                    input: H(TextInput, {
-                        value: text,
-                        oninput: (val: string) => {
-                            console.log('oninput ' + val);
-                            setLoadingState({ text: val, overrideUrl: url });
-                        }
-                    })
+                  label: 'Text Input',
+                  input: H(TextInput, {
+                    value: text,
+                    oninput: (val: string) => {
+                      console.log('oninput ' + val);
+                      setLoadingState({ text: val, overrideUrl: url });
+                    }
+                  })
+                }),
+                H(Field, {
+                  label: 'Subheading Input',
+                  input: H(TextInput, {
+                    value: subheading,
+                    oninput: (val: string) => {
+                      console.log('oninput ' + val);
+                      setLoadingState({ subheading: val, overrideUrl: url });
+                    }
+                  })
                 }),
                 H(Field, {
                     label: 'Image 1',
